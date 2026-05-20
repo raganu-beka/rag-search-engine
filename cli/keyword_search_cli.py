@@ -12,24 +12,29 @@ def load_movies_data(filename: str) -> list[dict[str, Any]]:
         return movies_data["movies"]
 
 
-def normalize_query(query: str) -> str:
-    query_normalized = query.lower()
+def tokenize(query: str) -> list[str]:
+    normalized = query.lower()
 
     punctionation_trans_dict = dict()
     for char in string.punctuation:
         punctionation_trans_dict[char] = ""
 
     punctionation_trans_table = str.maketrans(punctionation_trans_dict)
-    return query_normalized.translate(punctionation_trans_table)
+    normalized = normalized.translate(punctionation_trans_table)
+
+    return normalized.split(" ")
 
 
 def search_movies_by_keyword(
     movies: list[dict[str, Any]], query: str, *, max_results: int = 5
 ) -> list[dict[str, Any]]:
-    query_normalized = normalize_query(query)
-    results = [
-        movie for movie in movies if query_normalized in normalize_query(movie["title"])
-    ]
+
+    query_tokenized = tokenize(query)
+
+    def title_matches(movie):
+        return any(q in t for t in tokenize(movie["title"]) for q in query_tokenized)
+
+    results = [movie for movie in movies if title_matches(movie)]
     return results[:max_results]
 
 
