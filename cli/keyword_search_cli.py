@@ -5,6 +5,10 @@ import json
 import string
 from typing import Any
 
+from nltk.stem import PorterStemmer
+
+stemmer = PorterStemmer()
+
 
 def _load_stopwords_from_file(filename: str) -> list[str]:
     with open(filename, "r", encoding="utf-8") as f:
@@ -30,7 +34,7 @@ def tokenize(query: str) -> list[str]:
     punctionation_trans_table = str.maketrans(punctionation_trans_dict)
     normalized = normalized.translate(punctionation_trans_table)
 
-    return [t for t in normalized.split(" ") if t not in STOPWORDS]
+    return [stemmer.stem(t) for t in normalized.split(" ") if t not in STOPWORDS]
 
 
 def search_movies_by_keyword(
