@@ -1,10 +1,9 @@
-#!/user/bin/env python3
-
 import argparse
 import json
-import string
 from typing import Any
 
+import search
+import tokenization
 from nltk.stem import PorterStemmer
 
 stemmer = PorterStemmer()
@@ -24,30 +23,17 @@ def load_movies_data(filename: str) -> list[dict[str, Any]]:
         return movies_data["movies"]
 
 
-def tokenize(query: str) -> list[str]:
-    normalized = query.lower()
-
-    punctionation_trans_dict = dict()
-    for char in string.punctuation:
-        punctionation_trans_dict[char] = ""
-
-    punctionation_trans_table = str.maketrans(punctionation_trans_dict)
-    normalized = normalized.translate(punctionation_trans_table)
-
-    return [stemmer.stem(t) for t in normalized.split(" ") if t not in STOPWORDS]
-
-
 def search_movies_by_keyword(
     movies: list[dict[str, Any]], query: str, *, max_results: int = 5
 ) -> list[dict[str, Any]]:
 
-    query_tokenized = tokenize(query)
+    def tokenize(query: str) -> list[str]:
+        return tokenization.tokenize(query, STOPWORDS)
 
-    def title_matches(movie):
-        return any(q in t for t in tokenize(movie["title"]) for q in query_tokenized)
+    def get_movie_title(movie: dict[str, Any]):
+        return movie["title"]
 
-    results = [movie for movie in movies if title_matches(movie)]
-    return results[:max_results]
+    return search.search_by_keyword(movies, query, get_movie_title, tokenize)
 
 
 def print_movies(movies: list[dict[str, Any]]) -> None:
