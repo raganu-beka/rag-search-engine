@@ -6,6 +6,14 @@ import string
 from typing import Any
 
 
+def _load_stopwords_from_file(filename: str) -> list[str]:
+    with open(filename, "r", encoding="utf-8") as f:
+        return f.read().splitlines()
+
+
+STOPWORDS = _load_stopwords_from_file("./data/stopwords.txt")
+
+
 def load_movies_data(filename: str) -> list[dict[str, Any]]:
     with open(filename, "r", encoding="utf-8") as f:
         movies_data = json.load(f)
@@ -22,7 +30,7 @@ def tokenize(query: str) -> list[str]:
     punctionation_trans_table = str.maketrans(punctionation_trans_dict)
     normalized = normalized.translate(punctionation_trans_table)
 
-    return normalized.split(" ")
+    return [t for t in normalized.split(" ") if t not in STOPWORDS]
 
 
 def search_movies_by_keyword(
