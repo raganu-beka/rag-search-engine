@@ -4,9 +4,6 @@ from typing import Any
 
 import search
 import tokenization
-from nltk.stem import PorterStemmer
-
-stemmer = PorterStemmer()
 
 
 def _load_stopwords_from_file(filename: str) -> list[str]:
@@ -33,7 +30,9 @@ def search_movies_by_keyword(
     def get_movie_title(movie: dict[str, Any]):
         return movie["title"]
 
-    return search.search_by_keyword(movies, query, get_movie_title, tokenize)
+    return search.search_by_keyword(
+        movies, query, get_movie_title, tokenize, max_results=max_results
+    )
 
 
 def print_movies(movies: list[dict[str, Any]]) -> None:
