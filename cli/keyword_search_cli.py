@@ -4,14 +4,9 @@ from typing import Any
 
 import search
 import tokenization
+from inverted_index import InvertedIndex
 
-
-def _load_stopwords_from_file(filename: str) -> list[str]:
-    with open(filename, "r", encoding="utf-8") as f:
-        return f.read().splitlines()
-
-
-STOPWORDS = _load_stopwords_from_file("./data/stopwords.txt")
+MOVIES_DATA_FILENAME = "./data/movies.json"
 
 
 def load_movies_data(filename: str) -> list[dict[str, Any]]:
@@ -25,7 +20,7 @@ def search_movies_by_keyword(
 ) -> list[dict[str, Any]]:
 
     def tokenize(query: str) -> list[str]:
-        return tokenization.tokenize(query, STOPWORDS)
+        return tokenization.tokenize(query)
 
     def get_movie_title(movie: dict[str, Any]):
         return movie["title"]
@@ -41,12 +36,29 @@ def print_movies(movies: list[dict[str, Any]]) -> None:
 
 
 def search_movies(keyword: str) -> None:
-    MOVIES_DATA_FILENAME = "./data/movies.json"
-
     movies = load_movies_data(MOVIES_DATA_FILENAME)
     movie_resuls = search_movies_by_keyword(movies, keyword)
-
     print_movies(movie_resuls)
+
+
+def print_token_first_doc(index: InvertedIndex, token: str) -> None:
+    docs = index.get_documents(token)
+
+    if not docs:
+        print(f"No documents for token for token '{token}'")
+        return
+
+    print(f"First document for token '{token}' = {docs[0]}")
+
+
+def build_movies_index() -> None:
+    movies = load_movies_data(MOVIES_DATA_FILENAME)
+    index = InvertedIndex()
+
+    index.build(movies)
+    index.save()
+
+    print_token_first_doc(index, "merida")
 
 
 def main() -> None:
@@ -56,12 +68,17 @@ def main() -> None:
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
 
+    subparsers.add_parser("build", help="Build movies index")
+
     args = parser.parse_args()
 
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
             search_movies(args.query)
+
+        case "build":
+            build_movies_index()
 
         case _:
             parser.print_help()

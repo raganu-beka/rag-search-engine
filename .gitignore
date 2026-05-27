@@ -9,8 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
-# Data fiels
+# Data & cache fiels
 /data/
+/cache/
 
 # VSCode
 .vscode/
