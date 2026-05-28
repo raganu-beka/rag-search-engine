@@ -1,5 +1,7 @@
 from typing import Any, Callable
 
+from inverted_index import InvertedIndex
+
 
 def search_by_keyword(
     data: list[Any],
@@ -18,3 +20,22 @@ def search_by_keyword(
 
     results = [item for item in data if matches(item)]
     return results[:max_results]
+
+
+def search_with_inverted_index(
+    query: str,
+    tokenizer: Callable[[str], list[str]],
+    index: InvertedIndex,
+    *,
+    max_results: int = 5,
+) -> list[Any]:
+    results = []
+    search_tokens = tokenizer(query)
+
+    for token in search_tokens:
+        results.extend(index.get_documents(token))
+
+        if len(results) >= max_results:
+            break
+
+    return [index.docmap[doc_id] for doc_id in results[:max_results]]

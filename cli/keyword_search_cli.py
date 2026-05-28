@@ -15,40 +15,36 @@ def load_movies_data(filename: str) -> list[dict[str, Any]]:
         return movies_data["movies"]
 
 
-def search_movies_by_keyword(
-    movies: list[dict[str, Any]], query: str, *, max_results: int = 5
+def search_movies_with_inverted_index(
+    query: str,
+    inverted_index: InvertedIndex,
+    *,
+    max_results: int = 5,
 ) -> list[dict[str, Any]]:
 
     def tokenize(query: str) -> list[str]:
         return tokenization.tokenize(query)
 
-    def get_movie_title(movie: dict[str, Any]):
-        return movie["title"]
-
-    return search.search_by_keyword(
-        movies, query, get_movie_title, tokenize, max_results=max_results
+    return search.search_with_inverted_index(
+        query, tokenize, inverted_index, max_results=max_results
     )
 
 
 def print_movies(movies: list[dict[str, Any]]) -> None:
-    for i, movie in enumerate(movies):
-        print(f"{i+1}. {movie["title"]}")
+    for movie in movies:
+        print(f"{movie["id"]}. {movie["title"]}")
 
 
-def search_movies(keyword: str) -> None:
-    movies = load_movies_data(MOVIES_DATA_FILENAME)
-    movie_resuls = search_movies_by_keyword(movies, keyword)
-    print_movies(movie_resuls)
-
-
-def print_token_first_doc(index: InvertedIndex, token: str) -> None:
-    docs = index.get_documents(token)
-
-    if not docs:
-        print(f"No documents for token for token '{token}'")
+def search_movies(query: str) -> None:
+    index = InvertedIndex()
+    try:
+        index.load()
+    except Exception as e:
+        print(e)
         return
 
-    print(f"First document for token '{token}' = {docs[0]}")
+    movie_resuls = search_movies_with_inverted_index(query, index)
+    print_movies(movie_resuls)
 
 
 def build_movies_index() -> None:
@@ -57,8 +53,6 @@ def build_movies_index() -> None:
 
     index.build(movies)
     index.save()
-
-    print_token_first_doc(index, "merida")
 
 
 def main() -> None:
@@ -78,7 +72,9 @@ def main() -> None:
             search_movies(args.query)
 
         case "build":
+            print("Building inverted index...")
             build_movies_index()
+            print("Inveted index built")
 
         case _:
             parser.print_help()

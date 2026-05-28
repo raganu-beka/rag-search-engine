@@ -32,6 +32,23 @@ class InvertedIndex:
         with open(DOCMAP_CACHE_FILEPATH, "wb") as f:
             pickle.dump(self.docmap, f)
 
+    def load(self):
+        if not Path(INDEX_CACHE_FILEPATH).exists():
+            raise Exception(
+                f"Index cache file does not exist at: {INDEX_CACHE_FILEPATH}"
+            )
+
+        if not Path(DOCMAP_CACHE_FILEPATH).exists():
+            raise Exception(
+                f"Docmap cache file does not exist at: {DOCMAP_CACHE_FILEPATH}"
+            )
+
+        with open(INDEX_CACHE_FILEPATH, "rb") as f:
+            self.index = pickle.load(f)
+
+        with open(DOCMAP_CACHE_FILEPATH, "rb") as f:
+            self.docmap = pickle.load(f)
+
     def get_documents(self, term: str) -> list[int]:
         doc_ids = self.index.get(term.lower()) or []
         return sorted(doc_ids)
